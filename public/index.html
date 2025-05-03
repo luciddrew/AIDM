@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Round Chat</title>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <h1>Round Chat</h1>
+
+    <label>Username:</label>
+    <input id="username" type="text" placeholder="Your name" />
+    <button onclick="saveUsername()">Save Name</button>
+
+    <br /><br />
+
+    <input id="message" type="text" placeholder="Enter message" />
+    <button onclick="sendMessage()">Send</button>
+
+    <h2>Current Round Messages</h2>
+    <ul id="preview"></ul>
+
+    <h2>Log</h2>
+    <ul id="log"></ul>
+
+    <script>
+        const socket = io();
+        const log = document.getElementById('log');
+        const preview = document.getElementById('preview');
+
+        function saveUsername() {
+            const username = document.getElementById('username').value;
+            document.cookie = `username=${encodeURIComponent(username)}; path=/`;
+            alert("Username saved!");
+        }
+
+        function getUsername() {
+            const match = document.cookie.match(/(?:^|; )username=([^;]*)/);
+            return match ? decodeURIComponent(match[1]) : "";
+        }
+
+        // Auto-fill username from cookie
+        document.getElementById('username').value = getUsername();
+
+        function sendMessage() {
+            const msg = document.getElementById('message').value;
+            const username = getUsername() || "Anonymous";
+            socket.emit('message', { username, msg });
+            log.innerHTML += `<li><strong>${username}:</strong> ${msg}</li>`;
+        }
+
+        // Update preview on message receipt
+        socket.on('preview_update', (data) => {
+            const { username, message } = data;
+            const item = document.createElement('li');
+            item.textContent = `${username}: ${message}`;
+            preview.appendChild(item);
+        });
+
+        // Clear preview after round is sent
+        socket.on('round_complete', (data) => {
+            log.innerHTML += `<li><strong>Round ${data.round} complete:</strong> ${JSON.stringify(data.messages)}</li>`;
+            preview.innerHTML = '';
+        });
+    </script>
+</body>
+</html>
