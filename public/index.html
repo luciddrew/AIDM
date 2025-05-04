@@ -9,22 +9,26 @@
             height: 100%;
             margin: 0;
         }
+
         .chat-container {
             display: flex;
             flex-direction: column;
             height: 100vh;
         }
+
         .chat-log {
             flex-grow: 1;
             overflow-y: auto;
             padding: 1rem;
             background-color: #f8f9fa;
         }
+
         .chat-input {
             padding: 1rem;
             border-top: 1px solid #ddd;
             background: white;
         }
+
         .bubble {
             background: #e2f0d9;
             border-radius: 1rem;
@@ -32,28 +36,63 @@
             margin: 0.25rem 0;
             max-width: 80%;
         }
+
         .bubble strong {
             font-weight: 600;
             display: block;
         }
+
+        /* Settings Icon */
+        .settings-icon {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            color: #6c757d;
+        }
+
+        /* Popup card */
+        .settings-popup {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            width: 250px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 999;
+        }
     </style>
 </head>
 <body class="chat-container">
+
+    <!-- Settings Icon -->
+    <div class="settings-icon" onclick="toggleSettings()">
+        ⚙️
+    </div>
+
+    <!-- Settings Popup -->
+    <div class="settings-popup" id="settingsPopup">
+        <h6>Set Username</h6>
+        <input id="username" class="form-control mb-2" placeholder="Your name" />
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-sm btn-outline-primary" onclick="saveUsername()">Save</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="clearHistory()">Clear Chat</button>
+        </div>
+    </div>
+
+    <!-- Chat log -->
     <div class="chat-log" id="chatLog"></div>
 
+    <!-- Message input -->
     <div class="chat-input">
-        <div class="mb-2">
-            <label for="username">Username:</label>
-            <input id="username" class="form-control" placeholder="Your name" />
-            <button class="btn btn-outline-primary mt-1" onclick="saveUsername()">Save Name</button>
-        </div>
-
-        <div class="mb-2">
-            <textarea id="message" class="form-control" rows="2" placeholder="Type your message..."></textarea>
-        </div>
-
-        <div class="d-flex justify-content-between">
-            <div class="text-muted">Press “Send” to chat</div>
+        <textarea id="message" class="form-control mb-2" rows="2" placeholder="Type your message..."></textarea>
+        <div class="d-flex justify-content-end">
             <button class="btn btn-success" onclick="sendMessage()">Send</button>
         </div>
     </div>
@@ -63,12 +102,18 @@
         const log = document.getElementById('chatLog');
         const messageInput = document.getElementById('message');
         const usernameInput = document.getElementById('username');
+        const settingsPopup = document.getElementById('settingsPopup');
+
+        function toggleSettings() {
+            settingsPopup.style.display = settingsPopup.style.display === 'block' ? 'none' : 'block';
+        }
 
         function saveUsername() {
             const username = usernameInput.value.trim();
             if (!username) return alert("Please enter a username");
             localStorage.setItem('username', username);
             alert("Username saved!");
+            toggleSettings();
         }
 
         function getUsername() {
@@ -104,13 +149,24 @@
             history.forEach(appendMessage);
         }
 
+        function clearHistory() {
+            if (confirm("Clear all chat history?")) {
+                localStorage.removeItem('chatHistory');
+                log.innerHTML = '';
+            }
+        }
+
         socket.on('chat_message', (data) => {
             appendMessage(data);
             saveToLocalHistory(data);
         });
 
         // On load
-        usernameInput.value = getUsername();
+        const savedUsername = getUsername();
+        usernameInput.value = savedUsername;
+        if (!savedUsername) {
+            toggleSettings(); // Open modal automatically if no name saved
+        }
         loadLocalHistory();
     </script>
 </body>
