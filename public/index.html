@@ -87,17 +87,21 @@
 
         .settings-popup {
             position: fixed;
-            top: 60px;
-            right: 10px;
+            top: 0;
+            right: -300px;
+            height: 100%;
             width: 250px;
             background: #222;
-            border: 1px solid #444;
-            border-radius: 0.5rem;
+            border-left: 1px solid #444;
             padding: 1rem;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-            display: none;
+            box-shadow: -4px 0 8px rgba(0,0,0,0.4);
             z-index: 999;
             color: #f1f1f1;
+            transition: right 0.3s ease-in-out;
+        }
+
+        .settings-popup.active {
+            right: 0;
         }
 
         .form-control,
@@ -109,7 +113,6 @@
 
         @media (max-width: 576px) {
             .settings-popup {
-                right: 5px;
                 width: 90%;
             }
         }
@@ -117,10 +120,14 @@
 </head>
 <body class="chat-container">
 
-    <!-- Icon Buttons -->
+    <!-- Gear Icon -->
     <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
-        <div class="icon-button" onclick="toggleSettings()" title="Settings">⚙️</div>
-        <div class="icon-button sword" onclick="toggleSwordModal()" title="Sword">🗡️</div>
+        <div class="icon-button" onclick="openModal('settings')" title="Settings">⚙️</div>
+    </div>
+
+    <!-- Sword Icon -->
+    <div style="position: fixed; top: 50%; right: 10px; transform: translateY(-50%); z-index: 1000;">
+        <div class="icon-button sword" onclick="openModal('sword')" title="Sword">🗡️</div>
     </div>
 
     <!-- Settings Modal -->
@@ -134,7 +141,7 @@
     </div>
 
     <!-- Sword Modal -->
-    <div class="settings-popup" id="swordModal" style="top: 130px;">
+    <div class="settings-popup" id="swordModal">
         <h6>This is the sword modal</h6>
         <p>More coming soon...</p>
     </div>
@@ -155,8 +162,13 @@
         const log = document.getElementById('chatLog');
         const messageInput = document.getElementById('message');
         const usernameInput = document.getElementById('username');
+
         const settingsPopup = document.getElementById('settingsPopup');
         const swordModal = document.getElementById('swordModal');
+        const modals = {
+            settings: settingsPopup,
+            sword: swordModal
+        };
 
         const userColorMap = {};
         const userColors = [
@@ -173,12 +185,12 @@
             return userColorMap[username];
         }
 
-        function toggleSettings() {
-            settingsPopup.style.display = settingsPopup.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function toggleSwordModal() {
-            swordModal.style.display = swordModal.style.display === 'block' ? 'none' : 'block';
+        function openModal(which) {
+            // Close all modals first
+            for (const key in modals) {
+                if (key !== which) modals[key].classList.remove('active');
+            }
+            modals[which].classList.toggle('active');
         }
 
         function saveUsername() {
@@ -186,7 +198,7 @@
             if (!username) return alert("Please enter a username");
             localStorage.setItem('username', username);
             alert("Username saved!");
-            toggleSettings();
+            settingsPopup.classList.remove('active');
         }
 
         function getUsername() {
@@ -235,21 +247,21 @@
             saveToLocalHistory(data);
         });
 
-        // Dismiss modals on outside click
+        // Close modals on outside click
         document.addEventListener('click', (event) => {
-            const clickedInsidePopup = settingsPopup.contains(event.target) || swordModal.contains(event.target);
+            const clickedInsidePopup =
+                settingsPopup.contains(event.target) || swordModal.contains(event.target);
             const clickedButton = event.target.closest('.icon-button');
 
             if (!clickedInsidePopup && !clickedButton) {
-                settingsPopup.style.display = 'none';
-                swordModal.style.display = 'none';
+                for (const key in modals) modals[key].classList.remove('active');
             }
         });
 
         // On load
         const savedUsername = getUsername();
         usernameInput.value = savedUsername;
-        if (!savedUsername) toggleSettings();
+        if (!savedUsername) openModal('settings');
         loadLocalHistory();
     </script>
 </body>
