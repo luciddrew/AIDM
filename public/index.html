@@ -58,18 +58,11 @@
         }
 
         .bubble {
-            background: #2e8b57; /* muted green */
-            color: #f1f1f1;
             border-radius: 1rem;
             padding: 0.5rem 1rem;
             margin: 0.25rem 0;
             max-width: 80%;
-        }
-
-        .bubble strong {
-            font-weight: 600;
-            display: block;
-            color: #b6ffd6;
+            color: white;
         }
 
         .settings-icon {
@@ -147,6 +140,21 @@
         const usernameInput = document.getElementById('username');
         const settingsPopup = document.getElementById('settingsPopup');
 
+        const userColorMap = {};
+        const userColors = [
+            '#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#f44336',
+            '#3f51b5', '#009688', '#795548', '#607d8b'
+        ];
+        let colorIndex = 0;
+
+        function getUserColor(username) {
+            if (!userColorMap[username]) {
+                userColorMap[username] = userColors[colorIndex % userColors.length];
+                colorIndex++;
+            }
+            return userColorMap[username];
+        }
+
         function toggleSettings() {
             settingsPopup.style.display = settingsPopup.style.display === 'block' ? 'none' : 'block';
         }
@@ -176,7 +184,8 @@
         function appendMessage({ username, message }) {
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
-            bubble.innerHTML = `<strong>${username}</strong>${message}`;
+            bubble.style.backgroundColor = getUserColor(username);
+            bubble.innerHTML = `<strong>${username}:</strong> ${message}`;
             log.appendChild(bubble);
             log.scrollTop = log.scrollHeight;
         }
