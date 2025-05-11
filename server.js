@@ -27,13 +27,31 @@ const io = socketIo(server);
 // Serve static files from the "public" folder
 app.use(express.static('public'));
 
-// WebSocket logic
+// WebSocket connection handling
 io.on('connection', (socket) => {
   console.log('🟢 A client connected:', socket.id);
 
+  // Default: not identified as the extension
+  socket.isExtension = false;
+
+  // Allow extension to identify itself
+  socket.on('identify', (role) => {
+    if (role === 'extension') {
+      socket.isExtension = true;
+      console.log(`🔗 Chrome extension identified: ${socket.id}`);
+    }
+  });
+
+  // Handle incoming messages from users
   socket.on('chat_message', (data) => {
-    console.log(`📨 Relaying message from ${data.username}: ${data.message}`);
-    io.emit('chat_message', data); // Relay to all (Chrome extension listens)
+    console.log(`📨 Message from ${data.username}: ${data.message}`);
+
+    // Emit only to connected extensions
+    for (const [id, s] of io.of("/").sockets) {
+      if (s.isExtension) {
+        s.emit('chat_message', data);
+      }
+    }
   });
 
   socket.on('disconnect', () => {
