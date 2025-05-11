@@ -7,7 +7,7 @@ const app = express();
 
 // 🔒 Allow only your extension and trusted sites
 const allowedOrigins = [
-  'chrome-extension://hoeehbebhmfakndlhlpeghjenpbpebla', // ← Replace with your real extension ID
+  'chrome-extension://hoeehbebhmfakndlhlpeghjenpbpebla', // ← Your actual extension ID
   'https://chatgpt.com'
 ];
 
@@ -27,22 +27,22 @@ const io = socketIo(server);
 // Serve static files from the "public" folder
 app.use(express.static('public'));
 
-// Handle WebSocket connections
+// WebSocket logic
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+  console.log('🟢 A client connected:', socket.id);
 
   socket.on('chat_message', (data) => {
-    console.log(`Message from ${data.username}: ${data.message}`);
-    io.emit('chat_message', data);
+    console.log(`📨 Relaying message from ${data.username}: ${data.message}`);
+    io.emit('chat_message', data); // Relay to all (Chrome extension listens)
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    console.log('🔴 Client disconnected:', socket.id);
   });
 });
 
 // Start the server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+  console.log(`🚀 Server listening on port ${PORT}`);
 });
