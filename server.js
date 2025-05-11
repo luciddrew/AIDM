@@ -7,7 +7,7 @@ const app = express();
 
 // 🔒 Allow only your extension and trusted sites
 const allowedOrigins = [
-  'chrome-extension://hoeehbebhmfakndlhlpeghjenpbpebla', // ← Your actual extension ID
+  'chrome-extension://hoeehbebhmfakndlhlpeghjenpbpebla
   'https://chatgpt.com'
 ];
 
