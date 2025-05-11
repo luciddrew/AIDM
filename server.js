@@ -1,10 +1,25 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const cors = require("cors");            // ✅ Add this
+const cors = require('cors');
 
 const app = express();
-app.use(cors());                         // ✅ And this line
+
+// 🔒 Allow only your extension and trusted sites
+const allowedOrigins = [
+  'chrome-extension://hoeehbebhmfakndlhlpeghjenpbpebla', // ← Replace with your real extension ID
+  'https://chatgpt.com'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
 
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -14,23 +29,20 @@ app.use(express.static('public'));
 
 // Handle WebSocket connections
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+  console.log('A user connected:', socket.id);
 
-    // Listen for chat messages from this client
-    socket.on('chat_message', (data) => {
-        console.log(`Message from ${data.username}: ${data.message}`);
-        // Broadcast the message to all clients (including the sender)
-        io.emit('chat_message', data);
-    });
+  socket.on('chat_message', (data) => {
+    console.log(`Message from ${data.username}: ${data.message}`);
+    io.emit('chat_message', data);
+  });
 
-    // Handle disconnection
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-    });
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
 });
 
 // Start the server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
