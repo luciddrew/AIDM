@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Mobile optimization: disable zooming and scale properly -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Socket Message Sender</title>
+
+  <!-- iOS Web App Appearance -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SocketApp">
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    body {
+      -webkit-touch-callout: none; /* Disable text selection popups */
+      -webkit-user-select: none;
+      user-select: none;
+      font-size: 16px; /* Prevent iOS zoom on input focus */
+    }
+
+    input, button {
+      font-size: 16px !important; /* Prevent zoom on tap */
+    }
+
+    .nav-tabs .nav-link {
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 100%;
+      padding: 0 1rem;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container mt-3">
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs justify-content-between mb-3" id="myTab" role="tablist">
+      <li class="nav-item flex-fill text-center" role="presentation">
+        <button class="nav-link active w-100" id="main-tab" data-bs-toggle="tab" data-bs-target="#main" type="button" role="tab">Main</button>
+      </li>
+      <li class="nav-item flex-fill text-center" role="presentation">
+        <button class="nav-link w-100" id="melee-tab" data-bs-toggle="tab" data-bs-target="#melee" type="button" role="tab">Melee</button>
+      </li>
+      <li class="nav-item flex-fill text-center" role="presentation">
+        <button class="nav-link w-100" id="spells-tab" data-bs-toggle="tab" data-bs-target="#spells" type="button" role="tab">Spells</button>
+      </li>
+      <li class="nav-item flex-fill text-center" role="presentation">
+        <button class="nav-link w-100" id="custom-tab" data-bs-toggle="tab" data-bs-target="#custom" type="button" role="tab">Custom</button>
+      </li>
+      <li class="nav-item flex-fill text-center" role="presentation">
+        <button class="nav-link w-100" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">Settings</button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="myTabContent">
+      <!-- Main Tab -->
+      <div class="tab-pane fade show active" id="main" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title text-center mb-3">Send Message</h5>
+            <input
+              type="text"
+              id="messageInput"
+              class="form-control mb-3"
+              placeholder="Type your message"
+              autocomplete="off"
+            />
+            <button id="sendButton" class="btn btn-primary w-100">Send</button>
+            <div id="status" class="mt-2 text-center text-muted small"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Melee Tab -->
+      <div class="tab-pane fade" id="melee" role="tabpanel">
+        <h5 class="mt-3 text-center">Melee</h5>
+      </div>
+
+      <!-- Spells Tab -->
+      <div class="tab-pane fade" id="spells" role="tabpanel">
+        <h5 class="mt-3 text-center">Spells</h5>
+      </div>
+
+      <!-- Custom Tab -->
+      <div class="tab-pane fade" id="custom" role="tabpanel">
+        <h5 class="mt-3 text-center">Custom</h5>
+      </div>
+
+      <!-- Settings Tab -->
+      <div class="tab-pane fade" id="settings" role="tabpanel">
+        <h5 class="mt-3 text-center">Settings</h5>
+      </div>
+    </div>
+  </div>
+
+  <!-- Socket.io (still local reference — may fail without server) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const statusEl = document.getElementById("status");
+
+    const socket = io("https://aidm-73bi.onrender.com", {
+      transports: ["websocket"],
+      reconnectionAttempts: 5,
+      timeout: 5000
+    });
+
+    socket.on("connect", () => {
+      statusEl.textContent = "✅ Connected to server";
+      socket.emit("identify", "frontend");
+    });
+
+    socket.on("connect_error", (err) => {
+      statusEl.textContent = "❌ Connection error: " + err.message;
+    });
+
+    document.getElementById("sendButton").addEventListener("click", () => {
+      const input = document.getElementById("messageInput");
+      const message = input.value.trim();
+      if (message) {
+        socket.emit("chat_message", { username: "WebUser", message });
+        input.value = "";
+        statusEl.textContent = "Message sent!";
+      }
+    });
+  </script>
+</body>
+</html>
